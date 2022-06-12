@@ -1,16 +1,16 @@
 import os
-from typing import Dict
+from typing import Dict, List
 
 import boto3
 from botocore.exceptions import ClientError
 
 SAMPLE_BUCKET_NAME = "test-bucket"
-TENANTS: Dict[str, dict] = {
-    "tenant1": {
-        "region": "us-east-1",
-        "endpoint_url": "http://localhost:4566",
-    }
-}
+LOCALSTACK_HOST = os.environ.get("LOCALSTACK_HOST", "localhost")
+LOCALSTACK_URL = f"http://{LOCALSTACK_HOST}:4566"
+AWS_REGION = "us-east-1"
+TENANTS: List[str] = [
+    "tenant-1",
+]
 
 
 def create_tenant_sample_file(tenant: str) -> str:
@@ -51,9 +51,8 @@ def create_s3_client(tenant: str) -> boto3.client:
     :param tenant: The tenant to create the client for.
     :return: The S3 client.
     """
-    region = TENANTS[tenant]["region"]
-    endpoint_url = TENANTS[tenant]["endpoint_url"]
-    return boto3.client("s3", region_name=region, endpoint_url=endpoint_url)
+    region = AWS_REGION
+    return boto3.client("s3", region_name=region, endpoint_url=LOCALSTACK_URL, aws_access_key_id=tenant, aws_secret_access_key=tenant)
 
 
 def upload_file_to_s3(s3_client: boto3.client, local_path: str, bucket: str, key: str) -> dict:
@@ -123,6 +122,9 @@ def process_tenant(tenant: str) -> None:
         bucket=SAMPLE_BUCKET_NAME,
         key=bucket_key
     )
+
+    # Delete sample file
+    os.remove(sample_file_path)
 
     # List files in S3
     response = list_s3_objects(
