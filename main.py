@@ -52,7 +52,18 @@ def create_s3_client(tenant: str) -> boto3.client:
     :return: The S3 client.
     """
     region = AWS_REGION
-    return boto3.client("s3", region_name=region, endpoint_url=LOCALSTACK_URL, aws_access_key_id=tenant, aws_secret_access_key=tenant)
+
+    # Apparently, localstack accepts any pair of key id and access key, I didn't configure them anywhere
+    aws_access_key_id = tenant
+    aws_secret_access_key = tenant
+
+    return boto3.client(
+        "s3",
+        region_name=region,
+        endpoint_url=LOCALSTACK_URL,
+        aws_access_key_id=aws_access_key_id,
+        aws_secret_access_key=aws_secret_access_key
+    )
 
 
 def upload_file_to_s3(s3_client: boto3.client, local_path: str, bucket: str, key: str) -> dict:
